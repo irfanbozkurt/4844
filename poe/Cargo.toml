@@ -1,0 +1,21 @@
+cargo-features = ["edition2024"]
+
+[package]
+name = "poe"
+description = "zkLighter Perps Circuits"
+version = "0.0.1"
+readme = "README.md"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+homepage = "https://github.com/elliottech/zklighter-perps-circuits-plonky"
+repository = "https://github.com/elliottech/zklighter-perps-circuits-plonky"
+keywords = ["zkLighter"]
+categories = ["zkLighter"]
+
+[features]
+default = ["parallel", "std"]
+parallel = ["plonky2/parallel"]
+std = ["plonky2/std"]
+
+[dependencies]
+plonky2 = { git = "https://github.com/0xPolygonZero/plonky2.git", rev = "f5a5845bc8572a73dfcf7ee7fb2d76a16d426baa" }

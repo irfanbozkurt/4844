@@ -1,0 +1,18 @@
+{
+  "name": "hardhat-project",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ignition-ethers": "^0.15.7",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.15"
+  },
+  "scripts": {
+    "verify-local": "npx hardhat test main.js",
+    
+    "deploy-sepolia": "npx hardhat ignition deploy ./ignition/modules/Verify.js --network sepolia",
+    "verify-sepolia": "npx hardhat test main.js --network sepolia"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "ethers": "^6.13.4"
+  }
+}
