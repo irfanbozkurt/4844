@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/consensys/gnark-crypto/ecc/bls12-381/fr"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -167,4 +168,29 @@ func WriteToFile(filename, data string) {
 	if err != nil {
 		log.Fatalf("failed to write to file: %v", err)
 	}
+}
+
+func DeserializeBlob(blob *kzg4844.Blob) (Polynomial, error) {
+	poly := make(Polynomial, 4096)
+	for i := 0; i < 4096; i++ {
+		if err := poly[i].SetBytesCanonical(blob[i*32 : (i+1)*32]); err != nil {
+			return nil, fmt.Errorf("deserialize blob: %w", err)
+		}
+	}
+	return poly, nil
+}
+
+func DeserializeScalar(serScalar [32]byte) (fr.Element, error) {
+	scalar, err := ReduceCanonicalBigEndian(serScalar[:])
+	if err != nil {
+		return fr.Element{}, fmt.Errorf("deserialize scalar: %w", err)
+	}
+	return scalar, nil
+}
+
+func ReduceCanonicalBigEndian(serScalar []byte) (fr.Element, error) {
+	var scalar fr.Element
+	err := scalar.SetBytesCanonical(serScalar)
+
+	return scalar, err
 }

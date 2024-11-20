@@ -2,8 +2,11 @@ package main
 
 import (
 	"encoding/hex"
+	"fmt"
+	"math/big"
 	"path/filepath"
 
+	"github.com/consensys/gnark-crypto/ecc/bls12-381/fr"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -14,8 +17,23 @@ var (
 	To      = common.HexToAddress("0x0000000000000000000000000000000000000000") // Irrelevant
 )
 
+type Polynomial = []fr.Element
+
 func main() {
 	blob := GenerateRandomBlob()
+
+	/////////////////////
+	///////////////////// Send blob to Ethereum
+	/////////////////////
+
+	// // Send the blob to consensus layer, for those who want to download and check the blob KZG proof
+	// blobTxHash := SendBlobCarryingTx(blob)
+	// fmt.Printf("\nVisit the following url for tx details\nhttps://sepolia.etherscan.io/tx/%s\n\n", blobTxHash)
+	// fmt.Printf("\nVisit the following url to see the blob transaction details\nhttps://sepolia.blobscan.com/blob/%s\n\n", sidecar.BlobHashes()[0])
+
+	// Run the poe circuit, get the evaluation point, and the evaluation result. Here we
+	// get the point randomly for demonstration purposes. Also the verification would happen
+	// in Solidity.
 
 	/////////////////////
 	///////////////////// Generate opening proof for blob
@@ -34,16 +52,24 @@ func main() {
 	WriteToFile(filepath.Join(dirPath, "commitment"), hex.EncodeToString(blobCommitment[:]))
 	WriteToFile(filepath.Join(dirPath, "proof"), hex.EncodeToString(openingProof[:]))
 
-	/////////////////////
-	///////////////////// Send blob to Ethereum
-	/////////////////////
+	openingPointBig := new(big.Int)
+	openingPointDoubleBig := new(big.Int)
+	qwe, _ := DeserializeScalar(openingPoint)
 
-	// // Send the blob to consensus layer, for those who want to download and check the blob KZG proof
-	// blobTxHash := SendBlobCarryingTx(blob)
-	// fmt.Printf("\nVisit the following url for tx details\nhttps://sepolia.etherscan.io/tx/%s\n\n", blobTxHash)
-	// fmt.Printf("\nVisit the following url to see the blob transaction details\nhttps://sepolia.blobscan.com/blob/%s\n\n", sidecar.BlobHashes()[0])
+	doubleQwe := fr.Element{}
+	doubleQwe.Double(&qwe)
 
-	// Run the poe circuit, get the evaluation point, and the evaluation result. Here we
-	// get the point randomly for demonstration purposes. Also the verification would happen
-	// in Solidity.
+	qwe.ToBigIntRegular(openingPointBig)
+	doubleQwe.ToBigIntRegular(openingPointDoubleBig)
+
+	evaluationResultBig := new(big.Int)
+	qwe, _ = DeserializeScalar(evaluationResult)
+	qwe.ToBigIntRegular(evaluationResultBig)
+
+	fmt.Println()
+	fmt.Println("Opening point:", openingPointBig)
+	fmt.Println("Double of opening point:", openingPointDoubleBig)
+	fmt.Println()
+	fmt.Println("Evaluation result:", evaluationResultBig)
+	fmt.Println()
 }

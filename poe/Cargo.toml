@@ -12,10 +12,13 @@ repository = "https://github.com/elliottech/zklighter-perps-circuits-plonky"
 keywords = ["zkLighter"]
 categories = ["zkLighter"]
 
-[features]
-default = ["parallel", "std"]
-parallel = ["plonky2/parallel"]
-std = ["plonky2/std"]
-
 [dependencies]
+circuit = { git = "https://github.com/elliottech/zklighter-perps-circuits-plonky.git" }
 plonky2 = { git = "https://github.com/0xPolygonZero/plonky2.git", rev = "f5a5845bc8572a73dfcf7ee7fb2d76a16d426baa" }
+hex = "0.4"
+itertools = "0.13"
+num = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+rand = "0.8"
+env_logger = "0.11.5"
+
