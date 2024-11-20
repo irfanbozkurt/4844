@@ -6,6 +6,9 @@ use core::hash::{Hash, Hasher};
 use core::iter::{Product, Sum};
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
+use circuit::bigint::biguint::CircuitBuilderBiguint;
+use circuit::nonnative::{CircuitBuilderNonNative, NonNativeTarget};
+use circuit::types::config::Builder;
 use itertools::Itertools;
 use num::bigint::BigUint;
 use num::{Integer, One};
@@ -21,59 +24,44 @@ use serde::{Deserialize, Serialize};
 #[derive(Copy, Clone, Serialize, Deserialize)]
 pub struct BLS12381Scalar(pub [u64; 4]);
 
-fn biguint_from_array(arr: [u64; 4]) -> BigUint {
-    BigUint::from_slice(&[
-        arr[0] as u32,
-        (arr[0] >> 32) as u32,
-        arr[1] as u32,
-        (arr[1] >> 32) as u32,
-        arr[2] as u32,
-        (arr[2] >> 32) as u32,
-        arr[3] as u32,
-        (arr[3] >> 32) as u32,
-    ])
-}
+pub const BLS12_381_SCALAR_LIMBS: usize = 8;
 
-impl Default for BLS12381Scalar {
-    fn default() -> Self {
-        Self::ZERO
+impl BLS12381Scalar {
+    pub fn divide(
+        builder: &mut Builder,
+        numerator: &NonNativeTarget<Self>,
+        denominator: &NonNativeTarget<Self>,
+    ) -> NonNativeTarget<Self> {
+        let denominator_inv = builder.inv_nonnative(denominator);
+        let quot = builder.mul_nonnative(numerator, &denominator_inv);
+
+        // constrain quot * b - a = 0 mod p
+        let quot_times_denom = builder.mul_nonnative(&quot, denominator);
+        let quot_times_denom_minus_num = builder.sub_nonnative(&quot_times_denom, numerator);
+        builder.assert_zero_biguint(&quot_times_denom_minus_num.value);
+
+        quot
     }
-}
 
-impl PartialEq for BLS12381Scalar {
-    fn eq(&self, other: &Self) -> bool {
-        self.to_canonical_biguint() == other.to_canonical_biguint()
-    }
-}
+    pub fn pow_to_const(
+        builder: &mut Builder,
+        x: &NonNativeTarget<Self>,
+        pow: usize,
+    ) -> NonNativeTarget<Self> {
+        if pow == 0 {
+            let one_big = builder.one_biguint();
+            return builder.biguint_to_nonnative(&one_big);
+        }
+        if pow == 1 {
+            return x.clone();
+        }
 
-impl Eq for BLS12381Scalar {}
-
-impl Hash for BLS12381Scalar {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.to_canonical_biguint().hash(state)
-    }
-}
-
-impl Display for BLS12381Scalar {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        Display::fmt(&self.to_canonical_biguint(), f)
-    }
-}
-
-impl Debug for BLS12381Scalar {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        Debug::fmt(&self.to_canonical_biguint(), f)
-    }
-}
-
-impl Sample for BLS12381Scalar {
-    #[inline]
-    fn sample<R>(rng: &mut R) -> Self
-    where
-        R: rand::RngCore + ?Sized,
-    {
-        use num::bigint::RandBigInt;
-        Self::from_noncanonical_biguint(rng.gen_biguint_below(&Self::order()))
+        let mut result = Self::pow_to_const(builder, x, pow / 2);
+        result = builder.mul_nonnative(&result, &result);
+        if pow % 2 == 1 {
+            result = builder.mul_nonnative(&result, x);
+        }
+        result
     }
 }
 
@@ -88,7 +76,7 @@ impl Field for BLS12381Scalar {
         0x73EDA753299D7D48,
     ]);
 
-    const TWO_ADICITY: usize = 6;
+    const TWO_ADICITY: usize = 32; // irfan try 32
     const CHARACTERISTIC_TWO_ADICITY: usize = Self::TWO_ADICITY;
 
     // Sage: `g = GF(p).multiplicative_generator()`
@@ -160,6 +148,62 @@ impl Field for BLS12381Scalar {
 
     fn from_noncanonical_u64(n: u64) -> Self {
         Self::from_canonical_u64(n)
+    }
+}
+
+fn biguint_from_array(arr: [u64; 4]) -> BigUint {
+    BigUint::from_slice(&[
+        arr[0] as u32,
+        (arr[0] >> 32) as u32,
+        arr[1] as u32,
+        (arr[1] >> 32) as u32,
+        arr[2] as u32,
+        (arr[2] >> 32) as u32,
+        arr[3] as u32,
+        (arr[3] >> 32) as u32,
+    ])
+}
+
+impl Default for BLS12381Scalar {
+    fn default() -> Self {
+        Self::ZERO
+    }
+}
+
+impl PartialEq for BLS12381Scalar {
+    fn eq(&self, other: &Self) -> bool {
+        self.to_canonical_biguint() == other.to_canonical_biguint()
+    }
+}
+
+impl Eq for BLS12381Scalar {}
+
+impl Hash for BLS12381Scalar {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.to_canonical_biguint().hash(state)
+    }
+}
+
+impl Display for BLS12381Scalar {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        Display::fmt(&self.to_canonical_biguint(), f)
+    }
+}
+
+impl Debug for BLS12381Scalar {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        Debug::fmt(&self.to_canonical_biguint(), f)
+    }
+}
+
+impl Sample for BLS12381Scalar {
+    #[inline]
+    fn sample<R>(rng: &mut R) -> Self
+    where
+        R: rand::RngCore + ?Sized,
+    {
+        use num::bigint::RandBigInt;
+        Self::from_noncanonical_biguint(rng.gen_biguint_below(&Self::order()))
     }
 }
 

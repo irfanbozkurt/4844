@@ -1,12 +1,16 @@
+use circuit::bigint::biguint::{BigUintTarget, CircuitBuilderBiguint};
 use circuit::nonnative::{CircuitBuilderNonNative, NonNativeTarget};
 use circuit::types::config::{Builder, F};
+use circuit::u32::gadgets::arithmetic_u32::U32Target;
+use num::BigUint;
 use plonky2::hash::hash_types::HashOutTarget;
 use plonky2::plonk::config::AlgebraicHasher;
 
-use crate::bls12_381_scalar_field::BLS12381Scalar;
+use crate::blob_domain::get_brp_roots_of_unity_as_constant;
+use crate::bls12_381_scalar_field::{BLS12381Scalar, BLS12_381_SCALAR_LIMBS};
 
-pub const BLS12_381_SCALAR_LIMBS: usize = 8;
 pub const BLOB_WIDTH: usize = 4096;
+pub const BLOB_WIDTH_BITS: usize = 12;
 
 // Represents evaluations of polynomial P at points w_0, w_1, ..., w_4096
 // where w_i is the i'th 4096'th root of unity in bls12-381 scalar field.
@@ -48,14 +52,66 @@ impl BlobPolynomial {
     /// - ``WIDTH`` is BLOB_WIDTH
     /// - ``DOMAIN`` is the bit_reversal_permutation roots of unity
     /// - ``f(DOMAIN[i])`` is the blob[i]
-    pub fn eval_at(&self, _: &NonNativeTarget<BLS12381Scalar>) -> NonNativeTarget<BLS12381Scalar> {
-        // let mut result = NonNativeTarget::default();
-        // for (coeff, coeff_target) in self.0.iter().zip(self.iter()) {
-        //     let term = coeff_target.mul(&x);
-        //     result = result.add(&term);
-        // }
-        // result
+    ///
+    pub fn eval_at(
+        &self,
+        builder: &mut Builder,
+        x: &NonNativeTarget<BLS12381Scalar>,
+    ) -> NonNativeTarget<BLS12381Scalar> {
+        let one_big = builder.one_biguint();
+        let one_nonnative = builder.biguint_to_nonnative(&one_big);
 
-        todo!()
+        let roots_of_unity_brp = get_brp_roots_of_unity_as_constant(builder);
+
+        let mut result: NonNativeTarget<BLS12381Scalar> = builder.zero_nonnative();
+        let mut cp_is_not_root_of_unity: NonNativeTarget<BLS12381Scalar> =
+            builder.biguint_to_nonnative(&one_big);
+        let mut barycentric_evaluation: NonNativeTarget<BLS12381Scalar> = builder.zero_nonnative();
+
+        for i in 0..BLOB_WIDTH {
+            let nominator_i = builder.mul_nonnative(&roots_of_unity_brp[i], &self.0[i]);
+
+            // avoid division by zero
+            // safe_denominator_i = denominator_i       (denominator_i != 0)
+            // safe_denominator_i = 1                   (denominator_i == 0)
+            let denominator_i = builder.sub_nonnative(x, &roots_of_unity_brp[i]);
+            let is_zero_denominator_i = BigUintTarget {
+                limbs: vec![U32Target(
+                    builder.is_zero_biguint(&denominator_i.value).target,
+                )],
+            };
+            let is_zero_denominator_i = builder.biguint_to_nonnative(&is_zero_denominator_i);
+            let safe_denominator_i = builder.add_nonnative(&denominator_i, &is_zero_denominator_i);
+
+            // update `cp_is_not_root_of_unity`
+            // cp_is_not_root_of_unity = 1          (initialize)
+            // cp_is_not_root_of_unity = 0          (denominator_i == 0)
+            let non_zero_denominator_i =
+                builder.sub_nonnative(&one_nonnative, &is_zero_denominator_i);
+            cp_is_not_root_of_unity =
+                builder.mul_nonnative(&cp_is_not_root_of_unity, &non_zero_denominator_i);
+
+            // update `result`
+            // result = blob[i]     (challenge_point = roots_of_unity_brp[i])
+            let select_blob_i = builder.mul_nonnative(&self.0[i], &is_zero_denominator_i);
+            result = builder.add_nonnative(&result, &select_blob_i);
+
+            let term_i = BLS12381Scalar::divide(builder, &nominator_i, &safe_denominator_i);
+            barycentric_evaluation = builder.add_nonnative(&barycentric_evaluation, &term_i);
+        }
+
+        let cp_to_the_width = BLS12381Scalar::pow_to_const(builder, &x, BLOB_WIDTH);
+        let cp_to_the_width_minus_one = builder.sub_nonnative(&cp_to_the_width, &one_nonnative);
+        let width_big = builder.constant_biguint(&BigUint::from(BLOB_WIDTH));
+        let width: NonNativeTarget<BLS12381Scalar> = builder.biguint_to_nonnative(&width_big);
+        let factor = BLS12381Scalar::divide(builder, &cp_to_the_width_minus_one, &width);
+        barycentric_evaluation = builder.mul_nonnative(&barycentric_evaluation, &factor);
+
+        // if challenge_point is a root of unity, then result = blob[i], else result = barycentric_evaluation
+        let select_evaluation =
+            builder.mul_nonnative(&barycentric_evaluation, &cp_is_not_root_of_unity);
+        result = builder.add_nonnative(&result, &select_evaluation);
+
+        result
     }
 }

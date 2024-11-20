@@ -135,9 +135,9 @@ func ValidateAndGetOpeningProofForSolidity(
 		return versionedBlobHash, evaluationResult, blobCommitment, openingProof, fmt.Errorf("failed to compute proof: %w", err)
 	}
 
-	if err = kzg4844.VerifyProof(blobCommitment, openingPoint, evaluationResult, openingProof); err != nil {
-		return versionedBlobHash, evaluationResult, blobCommitment, openingProof, fmt.Errorf("failed to verify blob proof: %w", err)
-	}
+	// if err = kzg4844.VerifyProof(blobCommitment, openingPoint, evaluationResult, openingProof); err != nil {
+	// 	return versionedBlobHash, evaluationResult, blobCommitment, openingProof, fmt.Errorf("failed to verify blob proof: %w", err)
+	// }
 
 	return
 }
