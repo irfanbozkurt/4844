@@ -1,17 +1,10 @@
-use std::fs;
-use std::io::Read;
-use std::path::Path;
-
 use circuit::nonnative::{CircuitBuilderNonNative, NonNativeTarget};
 use circuit::types::config::{Builder, F};
-use itertools::Itertools;
-use num::{BigUint, Num};
 use plonky2::hash::hash_types::HashOutTarget;
 use plonky2::plonk::config::AlgebraicHasher;
 
 use crate::bls12_381_scalar_field::BLS12381Scalar;
 
-pub const DIR_PATH: &str = "../files";
 pub const BLS12_381_SCALAR_LIMBS: usize = 8;
 pub const BLOB_WIDTH: usize = 4096;
 
@@ -44,7 +37,17 @@ impl BlobPolynomial {
         )
     }
 
-    // Barycentric evaluation
+    /// Evaluate a polynomial (in evaluation form) at an arbitrary point ``z``.
+    /// - When ``z`` is in the domain, the evaluation can be found by indexing the polynomial at the
+    /// position that ``z`` is in the domain.
+    /// - When ``z`` is not in the domain, the barycentric formula is used:
+    ///    f(z) = (z**WIDTH - 1) / WIDTH  *  sum_(i=0)^WIDTH  (f(DOMAIN[i]) * DOMAIN[i]) / (z - DOMAIN[i])
+    ///
+    /// In our case:
+    /// - ``z`` is the challenge point in Fp
+    /// - ``WIDTH`` is BLOB_WIDTH
+    /// - ``DOMAIN`` is the bit_reversal_permutation roots of unity
+    /// - ``f(DOMAIN[i])`` is the blob[i]
     pub fn eval_at(&self, _: &NonNativeTarget<BLS12381Scalar>) -> NonNativeTarget<BLS12381Scalar> {
         // let mut result = NonNativeTarget::default();
         // for (coeff, coeff_target) in self.0.iter().zip(self.iter()) {
@@ -55,40 +58,4 @@ impl BlobPolynomial {
 
         todo!()
     }
-}
-
-pub fn read_blob() -> [BigUint; BLOB_WIDTH] {
-    let mut file = fs::File::open(Path::new(DIR_PATH).join("blob")).unwrap();
-    let mut blob_hex_string = String::new();
-    file.read_to_string(&mut blob_hex_string).unwrap();
-    assert_eq!(blob_hex_string.len(), BLOB_WIDTH * 32 * 2);
-
-    blob_hex_string
-        .trim()
-        .chars()
-        .chunks(64)
-        .into_iter()
-        .map(|chunk| BigUint::from_str_radix(&chunk.collect::<String>(), 16).unwrap())
-        .collect::<Vec<_>>()
-        .try_into()
-        .unwrap()
-}
-
-pub fn read_kzg_commitment_in_goldilocks() -> BigUint {
-    let mut file = fs::File::open(Path::new(DIR_PATH).join("commitment")).unwrap();
-    let mut kzg_commitment_hex_string = String::new();
-    file.read_to_string(&mut kzg_commitment_hex_string).unwrap();
-    assert_eq!(kzg_commitment_hex_string.len(), 96);
-
-    BigUint::from_str_radix(&kzg_commitment_hex_string, 16).unwrap()
-}
-
-pub fn read_bls1_381_scalar(path: &str) -> BigUint {
-    let mut file = fs::File::open(Path::new(DIR_PATH).join(path)).unwrap();
-    let mut bls1_381_scalar_hex_string = String::new();
-    file.read_to_string(&mut bls1_381_scalar_hex_string)
-        .unwrap();
-    assert_eq!(bls1_381_scalar_hex_string.len(), 64);
-
-    BigUint::from_str_radix(&bls1_381_scalar_hex_string, 16).unwrap()
 }
