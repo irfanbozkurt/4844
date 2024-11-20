@@ -2,8 +2,6 @@ package main
 
 import (
 	"encoding/hex"
-	"fmt"
-	"math/big"
 	"path/filepath"
 
 	"github.com/consensys/gnark-crypto/ecc/bls12-381/fr"
@@ -52,24 +50,24 @@ func main() {
 	WriteToFile(filepath.Join(dirPath, "commitment"), hex.EncodeToString(blobCommitment[:]))
 	WriteToFile(filepath.Join(dirPath, "proof"), hex.EncodeToString(openingProof[:]))
 
-	openingPointBig := new(big.Int)
-	openingPointDoubleBig := new(big.Int)
-	qwe, _ := DeserializeScalar(openingPoint)
+	// openingPointBig := new(big.Int)
+	// openingPointDoubleBig := new(big.Int)
+	// qwe, _ := DeserializeScalar(openingPoint)
 
-	doubleQwe := fr.Element{}
-	doubleQwe.Double(&qwe)
+	// doubleQwe := fr.Element{}
+	// doubleQwe.Double(&qwe)
 
-	qwe.ToBigIntRegular(openingPointBig)
-	doubleQwe.ToBigIntRegular(openingPointDoubleBig)
+	// qwe.ToBigIntRegular(openingPointBig)
+	// doubleQwe.ToBigIntRegular(openingPointDoubleBig)
 
-	evaluationResultBig := new(big.Int)
-	qwe, _ = DeserializeScalar(evaluationResult)
-	qwe.ToBigIntRegular(evaluationResultBig)
+	// evaluationResultBig := new(big.Int)
+	// qwe, _ = DeserializeScalar(evaluationResult)
+	// qwe.ToBigIntRegular(evaluationResultBig)
 
-	fmt.Println()
-	fmt.Println("Opening point:", openingPointBig)
-	fmt.Println("Double of opening point:", openingPointDoubleBig)
-	fmt.Println()
-	fmt.Println("Evaluation result:", evaluationResultBig)
-	fmt.Println()
+	// fmt.Println()
+	// fmt.Println("Opening point:", openingPointBig)
+	// fmt.Println("Double of opening point:", openingPointDoubleBig)
+	// fmt.Println()
+	// fmt.Println("Evaluation result:", evaluationResultBig)
+	// fmt.Println()
 }
