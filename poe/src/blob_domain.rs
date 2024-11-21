@@ -1,17 +1,23 @@
 use circuit::bigint::biguint::CircuitBuilderBiguint;
 use circuit::nonnative::{CircuitBuilderNonNative, NonNativeTarget};
 use circuit::types::config::Builder;
+use circuit::u32::gadgets::arithmetic_u32::CircuitBuilderU32;
 use lazy_static::lazy_static;
 use num::{BigUint, Num};
 
 use crate::blob_polynomial::BLOB_WIDTH;
-use crate::bls12_381_scalar_field::BLS12381Scalar;
+use crate::bls12_381_scalar_field::{BLS12381Scalar, BLS12_381_SCALAR_LIMBS};
 
 pub fn get_brp_roots_of_unity_as_constant(
     builder: &mut Builder,
 ) -> [NonNativeTarget<BLS12381Scalar>; BLOB_WIDTH] {
     ROOTS.clone().map(|root| {
-        let root_big = builder.constant_biguint(&root);
+        let mut root_big = builder.constant_biguint(&root);
+        if root_big.limbs.len() < BLS12_381_SCALAR_LIMBS {
+            root_big
+                .limbs
+                .resize(BLS12_381_SCALAR_LIMBS, builder.zero_u32());
+        }
         builder.biguint_to_nonnative(&root_big)
     })
 }

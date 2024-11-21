@@ -13,7 +13,8 @@ keywords = ["zkLighter"]
 categories = ["zkLighter"]
 
 [dependencies]
-circuit = { git = "https://github.com/elliottech/zklighter-perps-circuits-plonky.git" }
+# circuit = { git = "https://github.com/elliottech/zklighter-perps-circuits-plonky.git" }
+circuit = { path = "../../zklighter-perps-circuits-plonky/circuit" }
 plonky2 = { git = "https://github.com/0xPolygonZero/plonky2.git", rev = "f5a5845bc8572a73dfcf7ee7fb2d76a16d426baa" }
 hex = "0.4"
 itertools = "0.13"

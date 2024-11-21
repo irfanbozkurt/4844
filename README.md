@@ -1,14 +1,10 @@
 https://notes.ethereum.org/@vbuterin/proto_danksharding_faq#How-exactly-do-ZK-rollups-work-with-the-KZG-commitment-efficiently
 
 
-`btx` package demonstrates sending a blob carrying transaction and getting the KZG commitment for the blob data, and an opening proof at a point determined by EVM. 
-- Modify and run `main.go`. You can send a blob-carrying transaction to the consensus layer, or, you can generate an opening proof for your blob data. 
-- If you do the latter, it will save some artifacts in `files` folder to be read by `verifier` package. 
 
-
-`poe` package implements proof-of-commitment-equivalence in plonky2
-
-`verifier` package implements the smart contract to verify the KZG proof returned by EVM, the zk proof-of-commitment-equivalence, and another KZG proof for the same polynomial at a different point. 
-- After creating a blob commitment via `btx` package, you can run `npm run verify-sepolia` to call corresponding smart contract and check on-chain using the new point evaluation precompile. 
+1. Use `btx` package to send the blob to Ethereum consensus layer. This will give you back a `KZG commitment to your blob` and an `opening proof`. The code has lines to save the blob, its versioned hash, and the KZG commitment to a file. 
+2. Feed the blob and the commitment to `poe` circuit, which will compute another commitment to the same blob polynomial (simply by hashing), and apply fiat-shamir heuristic to get a challenge point from these two commitments. It will then evaluate the polynomial at this challenge point, and output the resulting value. 
+3. Use the `btx` package again to compute an opening proof for the blob polynomial at the challenge point outputted by the circuit. The resulting value must match the one outputted by the circuit. 
+4. Use `verifier` package to send this new opening proof to EVM, which will verify the opening on this new point. 
 
 Don't skip to fill-in the values in `.env.example` and save it as `.env`. 

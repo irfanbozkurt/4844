@@ -29,15 +29,11 @@ func main() {
 	// fmt.Printf("\nVisit the following url for tx details\nhttps://sepolia.etherscan.io/tx/%s\n\n", blobTxHash)
 	// fmt.Printf("\nVisit the following url to see the blob transaction details\nhttps://sepolia.blobscan.com/blob/%s\n\n", sidecar.BlobHashes()[0])
 
-	// Run the poe circuit, get the evaluation point, and the evaluation result. Here we
-	// get the point randomly for demonstration purposes. Also the verification would happen
-	// in Solidity.
-
 	/////////////////////
 	///////////////////// Generate opening proof for blob
 	/////////////////////
 
-	openingPoint := GenerateRandomScalar()
+	openingPoint := GenerateRandomScalar() // This should be hash(C||C')
 	versionedBlobHash, evaluationResult, blobCommitment, openingProof, err := ValidateAndGetOpeningProofForSolidity(blob, openingPoint)
 	if err != nil {
 		panic(err)

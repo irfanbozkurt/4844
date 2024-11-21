@@ -213,7 +213,6 @@ dependencies = [
 [[package]]
 name = "circuit"
 version = "0.0.1"
-source = "git+https://github.com/elliottech/zklighter-perps-circuits-plonky.git#9ac117cc6a4bd0031c40157e505c199b8fc34473"
 dependencies = [
  "anyhow",
  "bincode",

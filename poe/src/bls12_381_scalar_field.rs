@@ -32,15 +32,9 @@ impl BLS12381Scalar {
         numerator: &NonNativeTarget<Self>,
         denominator: &NonNativeTarget<Self>,
     ) -> NonNativeTarget<Self> {
-        let denominator_inv = builder.inv_nonnative(denominator);
-        let quot = builder.mul_nonnative(numerator, &denominator_inv);
-
-        // constrain quot * b - a = 0 mod p
-        let quot_times_denom = builder.mul_nonnative(&quot, denominator);
-        let quot_times_denom_minus_num = builder.sub_nonnative(&quot_times_denom, numerator);
-        builder.assert_zero_biguint(&quot_times_denom_minus_num.value);
-
-        quot
+        let denominator_inv =
+            builder.inv_nonnative_fixed_limbs(denominator, BLS12_381_SCALAR_LIMBS);
+        builder.mul_nonnative(numerator, &denominator_inv)
     }
 
     pub fn pow_to_const(

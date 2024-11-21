@@ -14,7 +14,7 @@ use poe::bls12_381_scalar_field::{BLS12381Scalar, BLS12_381_SCALAR_LIMBS};
 use poe::fiat_shamir::fiat_shamir_for_proof_of_commitment_equivalence;
 use poe::file_utils::{read_blob, read_bls1_381_scalar, read_kzg_commitment_in_goldilocks};
 
-const KZG_COMMITMENT_LIMBS: usize = 12;
+pub const KZG_COMMITMENT_LIMBS: usize = 12;
 
 fn main() {
     let _ = try_init_from_env(Env::default().filter_or(DEFAULT_FILTER_ENV, "debug"));
@@ -27,34 +27,23 @@ fn main() {
         ..CIRCUIT_CONFIG
     });
 
-    let blob_polynomial = BlobPolynomial::new(&mut builder);
-    let kzg_commitment = builder.add_virtual_biguint_target(KZG_COMMITMENT_LIMBS);
+    // let kzg_commitment = builder.add_virtual_biguint_target(KZG_COMMITMENT_LIMBS);
+    // builder.register_public_input_biguint(&kzg_commitment);
 
+    let blob_polynomial = BlobPolynomial::new(&mut builder);
     blob_polynomial
         .iter()
         .for_each(|coeff| builder.register_public_input_biguint(&coeff.value));
-    builder.register_public_input_biguint(&kzg_commitment);
 
-    let x: NonNativeTarget<BLS12381Scalar> =
-        builder.add_virtual_nonnative_target_sized(BLS12_381_SCALAR_LIMBS);
-    let y_from_file: NonNativeTarget<BLS12381Scalar> =
-        builder.add_virtual_nonnative_target_sized(BLS12_381_SCALAR_LIMBS);
-
-    builder.println_biguint(&y_from_file.value, "y_from_file");
+    let x = builder.add_virtual_nonnative_target_sized(BLS12_381_SCALAR_LIMBS);
+    let y_from_file = builder.add_virtual_nonnative_target_sized(BLS12_381_SCALAR_LIMBS);
 
     let y = blob_polynomial.eval_at(&mut builder, &x);
-    builder.println_biguint(&y.value, "y");
-
-    //
-    //
-    //
-    //
-    //
-    //
+    builder.connect_nonnative(&y, &y_from_file);
 
     // // Get the fiat-shamir challenge point hashing together the plonky2 commitment
     // // and the EVM commitment to the same polynomial
-    // let circuit_commitment = blob_polynomial_coefficients.commit::<Poseidon2Hash>(&mut builder);
+    // let circuit_commitment = blob_polynomial.commit::<Poseidon2Hash>(&mut builder);
     // let fiat_shamir_for_proof_of_commitment_equivalence =
     //     fiat_shamir_for_proof_of_commitment_equivalence::<Poseidon2Hash>(
     //         &mut builder,
@@ -75,9 +64,9 @@ fn main() {
         .for_each(|(coeff, coeff_target)| {
             pw.set_biguint_target(&coeff_target.value, coeff);
         });
-    pw.set_biguint_target(&kzg_commitment, &read_kzg_commitment_in_goldilocks());
     pw.set_biguint_target(&x.value, &read_bls1_381_scalar("x"));
     pw.set_biguint_target(&y_from_file.value, &read_bls1_381_scalar("y"));
+    // pw.set_biguint_target(&kzg_commitment, &read_kzg_commitment_in_goldilocks());
 
     let proof = data.prove(pw).unwrap();
 
