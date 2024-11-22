@@ -30,31 +30,23 @@ fn main() {
         ..CIRCUIT_CONFIG
     });
 
-    // let kzg_commitment = builder.add_virtual_biguint_target(KZG_COMMITMENT_LIMBS);
-    // builder.register_public_input_biguint(&kzg_commitment);
+    let kzg_commitment = builder.add_virtual_biguint_target(KZG_COMMITMENT_LIMBS);
+    builder.register_public_input_biguint(&kzg_commitment);
 
     let blob_polynomial = BlobPolynomial::new(&mut builder);
-    blob_polynomial
-        .iter()
-        .for_each(|coeff| builder.register_public_input_biguint(&coeff.value));
+    // blob_polynomial
+    //     .iter()
+    //     .for_each(|coeff| builder.register_public_input_biguint(&coeff.value));
 
-    let x = builder.add_virtual_nonnative_target_sized(BLS12_381_SCALAR_LIMBS);
-    let y_from_file = builder.add_virtual_nonnative_target_sized(BLS12_381_SCALAR_LIMBS);
-
-    let y = blob_polynomial.eval_at(&mut builder, &x);
-    builder.register_public_input_biguint(&y.value);
-    builder.connect_nonnative(&y, &y_from_file);
-
-    // // Get the fiat-shamir challenge point hashing together the plonky2 commitment
-    // // and the EVM commitment to the same polynomial
-    // let circuit_commitment = blob_polynomial.commit::<Poseidon2Hash>(&mut builder);
-    // let fiat_shamir_for_proof_of_commitment_equivalence =
-    //     fiat_shamir_for_proof_of_commitment_equivalence::<Poseidon2Hash>(
-    //         &mut builder,
-    //         &circuit_commitment,
-    //         &kzg_commitment,
-    //     );
-    // let challenge_point = fiat_shamir_for_proof_of_commitment_equivalence;
+    let circuit_commitment = blob_polynomial.commit::<Poseidon2Hash>(&mut builder);
+    let evaluation_point = fiat_shamir_for_proof_of_commitment_equivalence::<Poseidon2Hash>(
+        &mut builder,
+        &circuit_commitment,
+        &kzg_commitment,
+    );
+    let evaluation_result = blob_polynomial.eval_at(&mut builder, &evaluation_point);
+    builder.register_public_input_biguint(&evaluation_point.value);
+    builder.register_public_input_biguint(&evaluation_result.value);
 
     let data = builder.build::<C>();
 
@@ -68,11 +60,13 @@ fn main() {
         .for_each(|(coeff, coeff_target)| {
             pw.set_biguint_target(&coeff_target.value, coeff);
         });
-    pw.set_biguint_target(&x.value, &read_bls1_381_scalar("x"));
-    pw.set_biguint_target(&y_from_file.value, &read_bls1_381_scalar("y"));
-    // pw.set_biguint_target(&kzg_commitment, &read_kzg_commitment_in_goldilocks());
+    pw.set_biguint_target(&kzg_commitment, &read_kzg_commitment_in_goldilocks());
+    // pw.set_biguint_target(&x.value, &read_bls1_381_scalar("x"));
+    // pw.set_biguint_target(&y_from_file.value, &read_bls1_381_scalar("y"));
 
-    let proof = data.prove(pw);
+    let mut timing = TimingTree::new("prove", Level::Debug);
+    let proof = timed!(timing, "prove", { data.prove(pw) });
+    timing.print();
 
     ////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////

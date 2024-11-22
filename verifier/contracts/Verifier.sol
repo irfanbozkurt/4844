@@ -4,18 +4,6 @@ pragma solidity ^0.8.25;
 // import "hardhat/console.sol";
 
 contract Verifier {
-    address public constant POINT_EVALUATION_PRECOMPILE_ADDRESS = address(0x0A);
-    uint256 public constant BLS_MODULUS =
-        52_435_875_175_126_190_479_447_740_508_185_965_837_690_552_500_527_637_822_603_658_699_938_581_184_513;
-    uint32 public constant FIELD_ELEMENTS_PER_BLOB = 4096;
-
-    constructor() payable {}
-
-    error EVAL_FAILED_1();
-    error EVAL_FAILED_2();
-    error POINT_X_TOO_LARGE();
-    error POINT_Y_TOO_LARGE();
-
     function getDummyValue() external pure returns (uint256) {
         return 41;
     }
@@ -23,6 +11,18 @@ contract Verifier {
     function getBlobHash(bytes32) external view returns (bytes32) {
         return blobhash(0);
     }
+
+    constructor() payable {}
+
+    address public constant POINT_EVALUATION_PRECOMPILE_ADDRESS = address(0x0A);
+    uint256 public constant BLS_MODULUS =
+        52_435_875_175_126_190_479_447_740_508_185_965_837_690_552_500_527_637_822_603_658_699_938_581_184_513;
+    uint32 public constant FIELD_ELEMENTS_PER_BLOB = 4096;
+
+    error EVAL_FAILED_1();
+    error EVAL_FAILED_2();
+    error POINT_X_TOO_LARGE();
+    error POINT_Y_TOO_LARGE();
 
     /// @notice Evaluates the 4844 point using the precompile.
     /// @param _blobHash The versioned hash
@@ -39,7 +39,7 @@ contract Verifier {
     ) external view {
         require(_commitment.length == 48, "Invalid commitment length");
         require(_pointProof.length == 48, "Invalid point proof length");
-        
+
         if (_x >= BLS_MODULUS) revert POINT_X_TOO_LARGE();
         if (_y >= BLS_MODULUS) revert POINT_Y_TOO_LARGE();
 
