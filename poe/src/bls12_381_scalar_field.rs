@@ -32,8 +32,7 @@ impl BLS12381Scalar {
         numerator: &NonNativeTarget<Self>,
         denominator: &NonNativeTarget<Self>,
     ) -> NonNativeTarget<Self> {
-        let denominator_inv =
-            builder.inv_nonnative_fixed_limbs(denominator, BLS12_381_SCALAR_LIMBS);
+        let denominator_inv = builder.inv_nonnative(denominator);
         builder.mul_nonnative(numerator, &denominator_inv)
     }
 

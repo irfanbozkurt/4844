@@ -28,3 +28,4 @@ bls12_381 = { version = "0.8.0", package = "sp1_bls12_381", default-features = f
     "alloc",
 ] }
 lazy_static = "1.4"
+log = { version = "0.4.14", default-features = false }

@@ -6,9 +6,12 @@ use circuit::nonnative::{CircuitBuilderNonNative, NonNativeTarget};
 use circuit::poseidon2::hash::Poseidon2Hash;
 use circuit::types::config::{Builder, C, CIRCUIT_CONFIG};
 use env_logger::{try_init_from_env, Env, DEFAULT_FILTER_ENV};
+use log::Level;
 use plonky2::field::types::Field;
 use plonky2::iop::witness::PartialWitness;
 use plonky2::plonk::circuit_data::CircuitConfig;
+use plonky2::timed;
+use plonky2::util::timing::TimingTree;
 use poe::blob_polynomial::BlobPolynomial;
 use poe::bls12_381_scalar_field::{BLS12381Scalar, BLS12_381_SCALAR_LIMBS};
 use poe::fiat_shamir::fiat_shamir_for_proof_of_commitment_equivalence;
@@ -39,6 +42,7 @@ fn main() {
     let y_from_file = builder.add_virtual_nonnative_target_sized(BLS12_381_SCALAR_LIMBS);
 
     let y = blob_polynomial.eval_at(&mut builder, &x);
+    builder.register_public_input_biguint(&y.value);
     builder.connect_nonnative(&y, &y_from_file);
 
     // // Get the fiat-shamir challenge point hashing together the plonky2 commitment
@@ -68,10 +72,10 @@ fn main() {
     pw.set_biguint_target(&y_from_file.value, &read_bls1_381_scalar("y"));
     // pw.set_biguint_target(&kzg_commitment, &read_kzg_commitment_in_goldilocks());
 
-    let proof = data.prove(pw).unwrap();
+    let proof = data.prove(pw);
 
     ////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////
 
-    data.verify(proof).unwrap();
+    data.verify(proof.unwrap()).unwrap();
 }
