@@ -4,15 +4,11 @@ pragma solidity ^0.8.25;
 // import "hardhat/console.sol";
 
 contract Verifier {
+    constructor() payable {}
+
     function getDummyValue() external pure returns (uint256) {
         return 41;
     }
-
-    function getBlobHash(bytes32) external view returns (bytes32) {
-        return blobhash(0);
-    }
-
-    constructor() payable {}
 
     address public constant POINT_EVALUATION_PRECOMPILE_ADDRESS = address(0x0A);
     uint256 public constant BLS_MODULUS =
