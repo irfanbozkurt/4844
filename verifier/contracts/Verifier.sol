@@ -26,7 +26,7 @@ contract Verifier {
     /// @param _y The expected output
     /// @param _commitment The input kzg point
     /// @param _pointProof The quotient kzg
-    function evaluatePoint(
+    function EvaluatePoint(
         bytes32 _blobHash,
         uint256 _x,
         uint256 _y,

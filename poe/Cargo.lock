@@ -216,6 +216,8 @@ version = "0.0.1"
 dependencies = [
  "anyhow",
  "bincode",
+ "clap",
+ "clap_derive",
  "env_logger 0.11.5",
  "ff",
  "hashbrown 0.14.5",
@@ -224,7 +226,7 @@ dependencies = [
  "lazy_static",
  "log",
  "num",
- "plonky2",
+ "plonky2 0.2.2 (git+https://github.com/0xPolygonZero/plonky2.git?rev=2488cdacd49ede15737bc1172546d82e9521b79b)",
  "rand",
  "rayon",
  "serde",
@@ -233,6 +235,46 @@ dependencies = [
  "sha2",
  "starkyx",
 ]
+
+[[package]]
+name = "clap"
+version = "4.5.22"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "69371e34337c4c984bbe322360c2547210bf632eb2814bbe78a6e87a2935bd2b"
+dependencies = [
+ "clap_builder",
+ "clap_derive",
+]
+
+[[package]]
+name = "clap_builder"
+version = "4.5.22"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6e24c1b4099818523236a8ca881d2b45db98dadfb4625cf6608c12069fcbbde1"
+dependencies = [
+ "anstream",
+ "anstyle",
+ "clap_lex",
+ "strsim",
+]
+
+[[package]]
+name = "clap_derive"
+version = "4.5.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4ac6a0c7b1a9e9a5186361f67dfa1b88213572f427fb9ab038efb2bd8c582dab"
+dependencies = [
+ "heck",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.87",
+]
+
+[[package]]
+name = "clap_lex"
+version = "0.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "afb84c814227b90d6895e01398aee0d8033c00e7466aca416fb6a8e0eb19d8a7"
 
 [[package]]
 name = "colorchoice"
@@ -579,6 +621,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3a9bfc1af68b1726ea47d3d5109de126281def866b33970e10fbab11b5dafab3"
 
 [[package]]
+name = "heck"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
+
+[[package]]
 name = "hermit-abi"
 version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -881,6 +929,30 @@ dependencies = [
 [[package]]
 name = "plonky2"
 version = "0.2.2"
+source = "git+https://github.com/0xPolygonZero/plonky2.git?rev=2488cdacd49ede15737bc1172546d82e9521b79b#2488cdacd49ede15737bc1172546d82e9521b79b"
+dependencies = [
+ "ahash",
+ "anyhow",
+ "getrandom",
+ "hashbrown 0.14.5",
+ "itertools 0.11.0",
+ "keccak-hash",
+ "log",
+ "num",
+ "plonky2_field 0.2.2 (git+https://github.com/0xPolygonZero/plonky2.git?rev=2488cdacd49ede15737bc1172546d82e9521b79b)",
+ "plonky2_maybe_rayon 0.2.0 (git+https://github.com/0xPolygonZero/plonky2.git?rev=2488cdacd49ede15737bc1172546d82e9521b79b)",
+ "plonky2_util 0.2.0 (git+https://github.com/0xPolygonZero/plonky2.git?rev=2488cdacd49ede15737bc1172546d82e9521b79b)",
+ "rand",
+ "rand_chacha",
+ "serde",
+ "static_assertions",
+ "unroll",
+ "web-time",
+]
+
+[[package]]
+name = "plonky2"
+version = "0.2.2"
 source = "git+https://github.com/0xPolygonZero/plonky2.git?rev=f5a5845bc8572a73dfcf7ee7fb2d76a16d426baa#f5a5845bc8572a73dfcf7ee7fb2d76a16d426baa"
 dependencies = [
  "ahash",
@@ -891,9 +963,9 @@ dependencies = [
  "keccak-hash",
  "log",
  "num",
- "plonky2_field",
- "plonky2_maybe_rayon",
- "plonky2_util",
+ "plonky2_field 0.2.2 (git+https://github.com/0xPolygonZero/plonky2.git?rev=f5a5845bc8572a73dfcf7ee7fb2d76a16d426baa)",
+ "plonky2_maybe_rayon 0.2.0 (git+https://github.com/0xPolygonZero/plonky2.git?rev=f5a5845bc8572a73dfcf7ee7fb2d76a16d426baa)",
+ "plonky2_util 0.2.0 (git+https://github.com/0xPolygonZero/plonky2.git?rev=f5a5845bc8572a73dfcf7ee7fb2d76a16d426baa)",
  "rand",
  "rand_chacha",
  "serde",
@@ -905,12 +977,27 @@ dependencies = [
 [[package]]
 name = "plonky2_field"
 version = "0.2.2"
+source = "git+https://github.com/0xPolygonZero/plonky2.git?rev=2488cdacd49ede15737bc1172546d82e9521b79b#2488cdacd49ede15737bc1172546d82e9521b79b"
+dependencies = [
+ "anyhow",
+ "itertools 0.11.0",
+ "num",
+ "plonky2_util 0.2.0 (git+https://github.com/0xPolygonZero/plonky2.git?rev=2488cdacd49ede15737bc1172546d82e9521b79b)",
+ "rand",
+ "serde",
+ "static_assertions",
+ "unroll",
+]
+
+[[package]]
+name = "plonky2_field"
+version = "0.2.2"
 source = "git+https://github.com/0xPolygonZero/plonky2.git?rev=f5a5845bc8572a73dfcf7ee7fb2d76a16d426baa#f5a5845bc8572a73dfcf7ee7fb2d76a16d426baa"
 dependencies = [
  "anyhow",
  "itertools 0.11.0",
  "num",
- "plonky2_util",
+ "plonky2_util 0.2.0 (git+https://github.com/0xPolygonZero/plonky2.git?rev=f5a5845bc8572a73dfcf7ee7fb2d76a16d426baa)",
  "rand",
  "serde",
  "static_assertions",
@@ -920,10 +1007,23 @@ dependencies = [
 [[package]]
 name = "plonky2_maybe_rayon"
 version = "0.2.0"
+source = "git+https://github.com/0xPolygonZero/plonky2.git?rev=2488cdacd49ede15737bc1172546d82e9521b79b#2488cdacd49ede15737bc1172546d82e9521b79b"
+dependencies = [
+ "rayon",
+]
+
+[[package]]
+name = "plonky2_maybe_rayon"
+version = "0.2.0"
 source = "git+https://github.com/0xPolygonZero/plonky2.git?rev=f5a5845bc8572a73dfcf7ee7fb2d76a16d426baa#f5a5845bc8572a73dfcf7ee7fb2d76a16d426baa"
 dependencies = [
  "rayon",
 ]
+
+[[package]]
+name = "plonky2_util"
+version = "0.2.0"
+source = "git+https://github.com/0xPolygonZero/plonky2.git?rev=2488cdacd49ede15737bc1172546d82e9521b79b#2488cdacd49ede15737bc1172546d82e9521b79b"
 
 [[package]]
 name = "plonky2_util"
@@ -941,7 +1041,7 @@ dependencies = [
  "lazy_static",
  "log",
  "num",
- "plonky2",
+ "plonky2 0.2.2 (git+https://github.com/0xPolygonZero/plonky2.git?rev=f5a5845bc8572a73dfcf7ee7fb2d76a16d426baa)",
  "rand",
  "serde",
  "sp1_bls12_381",
@@ -1256,7 +1356,7 @@ dependencies = [
 [[package]]
 name = "starkyx"
 version = "0.1.0"
-source = "git+https://github.com/elliottech/starkyx.git?rev=66cfc1cbc8894a581c8856ac79ca6b4b11f994c5#66cfc1cbc8894a581c8856ac79ca6b4b11f994c5"
+source = "git+https://github.com/elliottech/starkyx.git?rev=78c6d97c34bdbd364988ac6b27b84996d3f5eaee#78c6d97c34bdbd364988ac6b27b84996d3f5eaee"
 dependencies = [
  "anyhow",
  "bincode",
@@ -1266,8 +1366,8 @@ dependencies = [
  "itertools 0.10.5",
  "log",
  "num",
- "plonky2",
- "plonky2_maybe_rayon",
+ "plonky2 0.2.2 (git+https://github.com/0xPolygonZero/plonky2.git?rev=2488cdacd49ede15737bc1172546d82e9521b79b)",
+ "plonky2_maybe_rayon 0.2.0 (git+https://github.com/0xPolygonZero/plonky2.git?rev=2488cdacd49ede15737bc1172546d82e9521b79b)",
  "rand",
  "serde",
  "subtle-encoding",
